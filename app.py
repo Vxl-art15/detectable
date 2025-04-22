@@ -8,7 +8,7 @@ import sys
 
 # Configuración de página Streamlit
 st.set_page_config(
-    page_title="Detección de Objetos en Tiempo Real",
+    page_title="Reconocimiento Automatizado de Objetos Visuales",
     page_icon="🔍",
     layout="wide"
 )
@@ -33,7 +33,7 @@ def load_yolov5_model(model_path='yolov5s.pt'):
                 return model
             except Exception as e:
                 # Si todo falla, intentar cargar el modelo con torch directamente
-                st.warning(f"Intentando método alternativo de carga...")
+                st.warning(f"Probando protocolo alternativo de transferencia...")
                 
                 # Modificar sys.path temporalmente para poder importar torch correctamente
                 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -46,7 +46,7 @@ def load_yolov5_model(model_path='yolov5s.pt'):
                 return model
     
     except Exception as e:
-        st.error(f"❌ Error al cargar el modelo: {str(e)}")
+        st.error(f"❌ Error en la carga del modelo: {str(e)}")
         st.info("""
         Recomendaciones:
         1. Instalar una versión compatible de PyTorch y YOLOv5:
@@ -60,43 +60,43 @@ def load_yolov5_model(model_path='yolov5s.pt'):
         return None
 
 # Título y descripción de la aplicación
-st.title("🔍 Detección de Objetos en Imágenes")
+st.title("🔍 Identificación Automatizada de Objetos Visuales")
 st.markdown("""
 Esta aplicación utiliza YOLOv5 para detectar objetos en imágenes capturadas con tu cámara.
 Ajusta los parámetros en la barra lateral para personalizar la detección.
 """)
 
 # Cargar el modelo
-with st.spinner("Cargando modelo YOLOv5..."):
+with st.spinner("Inicializando YOLOv5 "):
     model = load_yolov5_model()
 
 # Si el modelo se cargó correctamente, configuramos los parámetros
 if model:
     # Sidebar para los parámetros de configuración
-    st.sidebar.title("Parámetros")
+    st.sidebar.title("Variables de configuración")
     
     # Ajustar parámetros del modelo
     with st.sidebar:
-        st.subheader('Configuración de detección')
+        st.subheader('Ajustes de detección')
         model.conf = st.slider('Confianza mínima', 0.0, 1.0, 0.25, 0.01)
         model.iou = st.slider('Umbral IoU', 0.0, 1.0, 0.45, 0.01)
         st.caption(f"Confianza: {model.conf:.2f} | IoU: {model.iou:.2f}")
         
         # Opciones adicionales
-        st.subheader('Opciones avanzadas')
+        st.subheader('Configuración avanzada')
         try:
             model.agnostic = st.checkbox('NMS class-agnostic', False)
             model.multi_label = st.checkbox('Múltiples etiquetas por caja', False)
             model.max_det = st.number_input('Detecciones máximas', 10, 2000, 1000, 10)
         except:
-            st.warning("Algunas opciones avanzadas no están disponibles con esta configuración")
+            st.warning("Funciones avanzadas limitadas en esta configuración")
     
     # Contenedor principal para la cámara y resultados
     main_container = st.container()
     
     with main_container:
         # Capturar foto con la cámara
-        picture = st.camera_input("Capturar imagen", key="camera")
+        picture = st.camera_input("Tomar foto", key="camera")
         
         if picture:
             # Procesar la imagen capturada
@@ -104,11 +104,11 @@ if model:
             cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
             
             # Realizar la detección
-            with st.spinner("Detectando objetos..."):
+            with st.spinner("Escaneando contenido visual..."):
                 try:
                     results = model(cv2_img)
                 except Exception as e:
-                    st.error(f"Error durante la detección: {str(e)}")
+                    st.error(f"Fallo en el proceso de detección: {str(e)}")
                     st.stop()
             
             # Parsear resultados
@@ -122,14 +122,14 @@ if model:
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.subheader("Imagen con detecciones")
+                    st.subheader("Imagen anotada")
                     # Renderizar las detecciones
                     results.render()
                     # Mostrar imagen con las detecciones
                     st.image(cv2_img, channels='BGR', use_column_width=True)
                 
                 with col2:
-                    st.subheader("Objetos detectados")
+                    st.subheader("Instancias identificadas")
                     
                     # Obtener nombres de etiquetas
                     label_names = model.names
